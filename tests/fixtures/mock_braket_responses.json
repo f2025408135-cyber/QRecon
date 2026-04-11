@@ -1,0 +1,28 @@
+{
+  "devices": [
+    {
+      "deviceArn": "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
+      "deviceName": "SV1",
+      "deviceType": "SIMULATOR",
+      "providerName": "Amazon Braket",
+      "deviceStatus": "ONLINE",
+      "deviceCapabilities": "{\"paradigm\": {\"qubitCount\": 34}, \"action\": {\"braket.ir.jaqcd.program\": {\"supportedOperations\": [\"h\", \"cx\"]}}}"
+    },
+    {
+      "deviceArn": "arn:aws:braket:us-east-1::device/qpu/ionq/Aria-1",
+      "deviceName": "Aria 1",
+      "deviceType": "QPU",
+      "providerName": "IonQ",
+      "deviceStatus": "ONLINE",
+      "deviceCapabilities": "{\"paradigm\": {\"qubitCount\": 25, \"connectivity\": {\"fullyConnected\": true}}, \"action\": {\"braket.ir.jaqcd.program\": {\"supportedOperations\": [\"rx\", \"ry\", \"rz\", \"xx\"]}}}"
+    }
+  ],
+  "tasks": [
+    {
+      "quantumTaskArn": "arn:aws:braket:us-east-1:123456789012:quantum-task/task-12345",
+      "status": "COMPLETED",
+      "deviceArn": "arn:aws:braket:::device/quantum-simulator/amazon/sv1",
+      "createdAt": "2024-04-10T10:00:00Z"
+    }
+  ]
+}

@@ -1,0 +1,221 @@
+{
+  "version": "1.0.0",
+  "created": "2026-04-11",
+  "description": "Q-ATT&CK: Adversarial Tactics, Techniques and Common Knowledge for Quantum Cloud Infrastructure",
+  "tactics": [
+    {
+      "id": "QTA001",
+      "name": "Reconnaissance",
+      "shortname": "recon",
+      "description": "Adversary gathers information about quantum cloud platform topology, hardware backends, calibration data, API versioning, and user account structures without triggering security alerts."
+    },
+    {
+      "id": "QTA002",
+      "name": "Resource Development",
+      "shortname": "resource-dev",
+      "description": "Adversary establishes resources to support quantum cloud operations including obtaining API credentials, developing malicious circuit payloads, and acquiring quantum compute budget."
+    },
+    {
+      "id": "QTA003",
+      "name": "Initial Access",
+      "shortname": "initial-access",
+      "description": "Adversary gains entry to quantum cloud platform through credential theft, OAuth misconfiguration, SDK supply chain compromise, or API key exposure in public repositories."
+    },
+    {
+      "id": "QTA004",
+      "name": "Execution",
+      "shortname": "execution",
+      "description": "Adversary submits malicious or probing quantum circuits, manipulates job queues, or abuses circuit compilation pipelines to achieve objectives on the quantum cloud platform."
+    },
+    {
+      "id": "QTA005",
+      "name": "Discovery",
+      "shortname": "discovery",
+      "description": "Adversary enumerates available quantum backends, infers hardware topology from calibration APIs, maps multi-tenant boundaries, and identifies co-tenants via timing analysis."
+    },
+    {
+      "id": "QTA006",
+      "name": "Collection",
+      "shortname": "collection",
+      "description": "Adversary extracts calibration data, hardware noise characteristics, other users' job metadata, circuit intellectual property, or result data from quantum cloud infrastructure."
+    },
+    {
+      "id": "QTA007",
+      "name": "Impact",
+      "shortname": "impact",
+      "description": "Adversary disrupts quantum cloud operations through resource exhaustion, job interference, denial of quantum compute, or corruption of calibration state."
+    }
+  ],
+  "techniques": [
+    {
+      "id": "QTT001",
+      "tactic_id": "QTA001",
+      "name": "Backend topology enumeration",
+      "description": "Adversary queries quantum cloud provider APIs to enumerate available hardware backends, their qubit counts, connectivity graphs, and operational status. This information aids in identifying high-value shared backends and understanding physical qubit layouts that may be exploited for co-tenancy attacks.",
+      "platforms": ["ibm-quantum", "amazon-braket", "azure-quantum", "ionq"],
+      "severity": "low",
+      "detection_hints": ["Unusually high frequency of backend listing API calls", "Enumeration of all available backends in short time window", "Backend queries not followed by job submission"],
+      "mitigation_hints": ["Rate-limit backend enumeration endpoints", "Require authentication for detailed topology data", "Aggregate backend queries in audit logs"]
+    },
+    {
+      "id": "QTT002",
+      "tactic_id": "QTA001",
+      "name": "Calibration data harvesting",
+      "description": "Adversary systematically retrieves hardware calibration data (T1/T2 times, gate fidelities, readout errors, cross-talk matrices) to build detailed models of physical qubit behavior. Calibration fingerprints can identify specific hardware units, infer scheduling patterns, and support side-channel analysis.",
+      "platforms": ["ibm-quantum", "amazon-braket"],
+      "severity": "medium",
+      "detection_hints": ["Repeated calibration API calls across multiple backends", "Calibration queries without corresponding quantum job submission", "Automated calibration data export patterns"],
+      "mitigation_hints": ["Limit calibration data granularity for free-tier users", "Audit calibration data access frequency per user", "Consider calibration data as sensitive infrastructure information"]
+    },
+    {
+      "id": "QTT003",
+      "tactic_id": "QTA001",
+      "name": "Job queue timing analysis",
+      "description": "Adversary submits minimal probe circuits and measures execution delay patterns to infer queue depth, other users' job sizes, and scheduling algorithms. Timing oracles in shared quantum backends can reveal information about co-tenants' computational workloads.",
+      "platforms": ["ibm-quantum", "amazon-braket", "azure-quantum", "ionq"],
+      "severity": "medium",
+      "detection_hints": ["High frequency of minimal single-gate circuit submissions", "Pattern of submission followed immediately by status polling", "Systematic variation of circuit depth with timing measurement"],
+      "mitigation_hints": ["Add timing jitter to queue position information", "Limit job status polling frequency", "Avoid exposing queue depth in API responses"]
+    },
+    {
+      "id": "QTT004",
+      "tactic_id": "QTA003",
+      "name": "API key exposure via public repository",
+      "description": "Adversary searches public code repositories (GitHub, GitLab, HuggingFace) for exposed IBM Quantum tokens, AWS credentials, or other quantum cloud API keys accidentally committed by developers. Qiskit configuration files (qiskitrc) and Jupyter notebooks are common exposure vectors.",
+      "platforms": ["ibm-quantum", "amazon-braket", "azure-quantum", "ionq"],
+      "severity": "critical",
+      "detection_hints": ["API calls from unusual geographic locations", "Sudden increase in compute usage on existing account", "Access from IP addresses not associated with account history"],
+      "mitigation_hints": ["Implement credential scanning in CI/CD pipelines", "Rotate API keys on any public repository exposure", "Use short-lived tokens where platform supports them", "Monitor for qiskitrc files in public repositories"]
+    },
+    {
+      "id": "QTT005",
+      "tactic_id": "QTA003",
+      "name": "OAuth scope misconfiguration abuse",
+      "description": "Adversary exploits overly broad OAuth scopes granted during quantum cloud platform authentication to access resources beyond intended permissions. Platforms offering programmatic access via OAuth may not enforce principle of least privilege on scope definitions.",
+      "platforms": ["ibm-quantum", "azure-quantum"],
+      "severity": "high",
+      "detection_hints": ["Token requests for maximum available scopes", "Access to administrative endpoints using user-level OAuth tokens", "Scope escalation attempts in token refresh flows"],
+      "mitigation_hints": ["Enforce scope validation on every API call, not just token issuance", "Implement fine-grained scopes (read:backends, submit:jobs, read:results)", "Audit token scopes in access logs"]
+    },
+    {
+      "id": "QTT006",
+      "tactic_id": "QTA003",
+      "name": "SDK supply chain compromise",
+      "description": "Adversary compromises quantum SDK packages (Qiskit, Braket SDK, Cirq) via typosquatting on PyPI, dependency confusion attacks, or malicious pull requests to extract credentials, exfiltrate circuit intellectual property, or redirect job results to adversary-controlled endpoints.",
+      "platforms": ["ibm-quantum", "amazon-braket", "azure-quantum", "ionq"],
+      "severity": "critical",
+      "detection_hints": ["Unexpected network connections from SDK installation", "Hash mismatch on installed SDK packages", "SDK packages installed from non-official registries"],
+      "mitigation_hints": ["Pin SDK dependencies to verified hash values", "Use private package registries with integrity verification", "Audit SDK network behavior in sandboxed environments"]
+    },
+    {
+      "id": "QTT007",
+      "tactic_id": "QTA004",
+      "name": "Calibration-state pollution circuit",
+      "description": "Adversary submits carefully crafted circuits designed to degrade hardware calibration state, increasing error rates for subsequent users' jobs on shared backends. By exploiting the physical nature of qubit decoherence, an adversary may be able to cause targeted computation failures for co-tenants.",
+      "platforms": ["ibm-quantum"],
+      "severity": "high",
+      "detection_hints": ["Circuits with unusually high gate counts targeting specific qubits", "Systematic submission to same backend repeatedly", "Circuit patterns inconsistent with legitimate quantum algorithms"],
+      "mitigation_hints": ["Implement circuit analysis before execution", "Monitor per-qubit error rate drift across jobs", "Isolate calibration cycles between tenant jobs on sensitive backends"]
+    },
+    {
+      "id": "QTT008",
+      "tactic_id": "QTA004",
+      "name": "Resource exhaustion via deep circuit submission",
+      "description": "Adversary submits circuits at or near maximum allowed depth and qubit count to exhaust quantum compute budget allocations, occupy hardware backends, and deny service to legitimate users. Free-tier rate limits may be insufficient to prevent queue flooding.",
+      "platforms": ["ibm-quantum", "amazon-braket", "azure-quantum", "ionq"],
+      "severity": "medium",
+      "detection_hints": ["Sustained submission of maximum-depth circuits", "Queue occupancy spike from single user", "Job submission rate at rate limit ceiling"],
+      "mitigation_hints": ["Implement per-user queue depth limits", "Priority queuing for paid tiers", "Anomaly detection on job submission patterns"]
+    },
+    {
+      "id": "QTT009",
+      "tactic_id": "QTA005",
+      "name": "Multi-tenant boundary probing",
+      "description": "Adversary submits circuits specifically designed to detect the presence of other users' computations on shared quantum hardware, attempting to identify co-tenancy through error rate variation, qubit availability patterns, or cross-talk signatures that change with neighboring qubit usage.",
+      "platforms": ["ibm-quantum"],
+      "severity": "high",
+      "detection_hints": ["Circuits designed to measure cross-talk on idle qubits", "Repeated identical circuit submissions with comparison of noise characteristics", "Circuits targeting qubit pairs known for high cross-talk"],
+      "mitigation_hints": ["Physical qubit partitioning between concurrent users where possible", "Noise characterization results should not be tenant-distinguishable", "Randomize qubit assignment to prevent fingerprinting"]
+    },
+    {
+      "id": "QTT010",
+      "tactic_id": "QTA005",
+      "name": "Backend hardware fingerprinting",
+      "description": "Adversary uses calibration data and noise characteristics to fingerprint specific physical quantum processor units, enabling tracking of which specific hardware unit is being used across sessions and correlating this with known vulnerability profiles of specific devices.",
+      "platforms": ["ibm-quantum", "amazon-braket"],
+      "severity": "low",
+      "detection_hints": ["Systematic collection of noise characteristics across multiple backends", "Correlation of calibration data with job execution timing", "Backend selection patterns inconsistent with performance optimization"],
+      "mitigation_hints": ["Obfuscate backend-specific calibration signatures in API responses", "Add calibration data noise for anonymization", "Do not expose hardware unit serial identifiers in API"]
+    },
+    {
+      "id": "QTT011",
+      "tactic_id": "QTA006",
+      "name": "Circuit intellectual property extraction",
+      "description": "Adversary with platform administrative access or through API misconfiguration attempts to access other users' submitted circuit designs, which may represent proprietary quantum algorithms, pharmaceutical molecular simulations, or financial optimization models with significant commercial value.",
+      "platforms": ["ibm-quantum", "amazon-braket", "azure-quantum", "ionq"],
+      "severity": "critical",
+      "detection_hints": ["API calls accessing job data outside of authenticated user's namespace", "IDOR attempts on job ID endpoints", "Bulk job listing across tenant boundaries"],
+      "mitigation_hints": ["Strict object-level authorization on all job endpoints", "Encrypt circuit data at rest with per-tenant keys", "Audit log all job data access"]
+    },
+    {
+      "id": "QTT012",
+      "tactic_id": "QTA006",
+      "name": "Result leakage via shared backend state",
+      "description": "Adversary exploits residual quantum state or measurement correlation artifacts on shared quantum hardware to infer partial information about previous users' circuit results. While difficult in practice with current error rates, this represents a novel threat class unique to multi-tenant quantum computing.",
+      "platforms": ["ibm-quantum"],
+      "severity": "medium",
+      "detection_hints": ["Circuits specifically designed to measure residual state from reset operations", "Systematic comparison of fresh-initialized vs reused qubit behavior", "Statistical analysis of measurement results for non-random patterns"],
+      "mitigation_hints": ["Implement verified qubit reset protocols between tenant jobs", "Research and publish reset fidelity guarantees", "Consider dedicated qubit allocation for sensitive computations"]
+    },
+    {
+      "id": "QTT013",
+      "tactic_id": "QTA001",
+      "name": "Account structure enumeration",
+      "description": "Adversary probes quantum cloud platform APIs for information about account structures, organization hierarchies, group memberships, and user identifiers to map the tenant landscape and identify high-value accounts for targeting.",
+      "platforms": ["ibm-quantum", "azure-quantum"],
+      "severity": "low",
+      "detection_hints": ["Enumeration of organization or group endpoints", "Sequential or pattern-based user ID probing", "API calls to account management endpoints by non-administrative users"],
+      "mitigation_hints": ["Implement rate limiting on account enumeration endpoints", "Return consistent responses for valid and invalid account identifiers", "Restrict organization membership visibility"]
+    },
+    {
+      "id": "QTT014",
+      "tactic_id": "QTA002",
+      "name": "Quantum compute budget theft",
+      "description": "Adversary uses stolen credentials or abuses platform trial credits to consume quantum compute resources at scale, either for their own quantum computation needs or to conduct extended attack campaigns requiring many circuit submissions.",
+      "platforms": ["ibm-quantum", "amazon-braket", "azure-quantum", "ionq"],
+      "severity": "high",
+      "detection_hints": ["Sudden spike in compute usage on compromised account", "Job submission from unusual geographic location", "Credit consumption rate inconsistent with historical account behavior"],
+      "mitigation_hints": ["Implement anomaly detection on credit consumption", "Geographic access controls or MFA step-up for large compute requests", "Real-time alerting on unusual usage spikes"]
+    },
+    {
+      "id": "QTT015",
+      "tactic_id": "QTA005",
+      "name": "Transpiler information disclosure",
+      "description": "Adversary submits circuits to cloud transpiler endpoints and analyzes the transpiled output to infer hardware topology details, qubit connectivity, and gate set characteristics that are not directly exposed via API but are revealed through transpilation behavior.",
+      "platforms": ["ibm-quantum", "amazon-braket"],
+      "severity": "low",
+      "detection_hints": ["High volume of transpile-only requests without execution", "Systematic variation of input circuits to probe transpiler behavior", "Transpile requests targeting unavailable or restricted backends"],
+      "mitigation_hints": ["Rate-limit transpilation-only API calls", "Consider hardware topology data as sensitive and limit indirect disclosure", "Audit transpilation patterns in access logs"]
+    },
+    {
+      "id": "QTT016",
+      "tactic_id": "QTA007",
+      "name": "Quantum job interference",
+      "description": "Adversary with access to job management APIs attempts to cancel, modify, or delay other users' quantum jobs through authorization bypass vulnerabilities in job lifecycle management endpoints. Successful execution could disrupt time-sensitive quantum computations.",
+      "platforms": ["ibm-quantum", "amazon-braket", "azure-quantum", "ionq"],
+      "severity": "critical",
+      "detection_hints": ["Job cancellation API calls for job IDs not owned by authenticated user", "IDOR probing on job management endpoints", "Job status modification attempts on foreign job IDs"],
+      "mitigation_hints": ["Strict object-level authorization on all job lifecycle endpoints", "Separate authentication context for job management vs result retrieval", "Audit all job cancellation events with user attribution"]
+    },
+    {
+      "id": "QTT017",
+      "tactic_id": "QTA003",
+      "name": "Jupyter notebook credential exposure",
+      "description": "Adversary targets public Jupyter notebooks on GitHub, Kaggle, Google Colab, and HuggingFace that contain hardcoded IBM Quantum tokens, AWS credentials, or Azure service principal credentials used for quantum computing demonstrations and tutorials. This is the highest-frequency credential exposure vector in the quantum ecosystem.",
+      "platforms": ["ibm-quantum", "amazon-braket", "azure-quantum"],
+      "severity": "critical",
+      "detection_hints": ["Credential use from IP addresses inconsistent with account owner location", "API access patterns inconsistent with Jupyter interactive usage", "Bulk operations not typical of interactive notebook sessions"],
+      "mitigation_hints": ["Scan all published notebooks for credential patterns before publication", "Use environment variables and secrets managers in notebooks", "IBM Quantum should implement token usage monitoring for unusual access patterns", "Implement notebook scanning in GitHub Actions for qiskitrc and token patterns"]
+    }
+  ]
+}

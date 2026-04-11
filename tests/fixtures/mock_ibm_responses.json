@@ -1,0 +1,104 @@
+{
+  "backends": [
+    {
+      "backend_name": "ibm_brisbane",
+      "n_qubits": 127,
+      "status": "active",
+      "operational": true,
+      "simulator": false,
+      "basis_gates": ["id", "rz", "sx", "x", "cx", "reset"],
+      "max_circuits": 300,
+      "max_shots": 10000,
+      "coupling_map": [[0, 1], [1, 0], [1, 2], [2, 1], [2, 3], [3, 2]],
+      "backend_version": "1.0.0"
+    },
+    {
+      "backend_name": "ibmq_qasm_simulator",
+      "n_qubits": 32,
+      "status": "active",
+      "operational": true,
+      "simulator": true,
+      "basis_gates": ["u1", "u2", "u3", "cx", "cz", "id", "x", "y", "z", "h", "s", "sdg", "t", "tdg", "rx", "ry", "rz", "reset"],
+      "max_circuits": 300,
+      "max_shots": 8192,
+      "coupling_map": null,
+      "backend_version": "0.1.547"
+    }
+  ],
+  "calibration": {
+    "ibm_brisbane": {
+      "qubits": [
+        {
+          "qubit": 0,
+          "T1": 210.5,
+          "T2": 150.2,
+          "readout_error": 0.015,
+          "prob_meas0_prep1": 0.02,
+          "prob_meas1_prep0": 0.01
+        },
+        {
+          "qubit": 1,
+          "T1": 190.1,
+          "T2": 140.8,
+          "readout_error": 0.018,
+          "prob_meas0_prep1": 0.022,
+          "prob_meas1_prep0": 0.014
+        }
+      ],
+      "gates": [
+        {
+          "gate": "cx",
+          "qubits": [0, 1],
+          "gate_error": 0.008
+        },
+        {
+          "gate": "cx",
+          "qubits": [1, 0],
+          "gate_error": 0.008
+        }
+      ],
+      "last_update_date": "2024-04-10T12:00:00Z"
+    }
+  },
+  "account_info": {
+    "id": "user123",
+    "hubs": [
+      {
+        "hub": "ibm-q",
+        "group": "open",
+        "project": "main"
+      }
+    ]
+  },
+  "jobs": [
+    {
+      "id": "job_12345",
+      "creation_date": "2024-04-10T10:00:00Z",
+      "status": "COMPLETED",
+      "backend_name": "ibmq_qasm_simulator"
+    },
+    {
+      "id": "job_12346",
+      "creation_date": "2024-04-10T10:05:00Z",
+      "status": "RUNNING",
+      "backend_name": "ibm_brisbane"
+    }
+  ],
+  "job_results": {
+    "job_12345": {
+      "success": true,
+      "results": [
+        {
+          "shots": 1024,
+          "success": true,
+          "data": {
+            "counts": {
+              "0x0": 510,
+              "0x3": 514
+            }
+          }
+        }
+      ]
+    }
+  }
+}
