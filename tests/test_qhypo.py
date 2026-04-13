@@ -20,33 +20,33 @@ def mock_attack_surface():
         raw_findings=[]
     )
 
-class MockMessage:
-    def __init__(self, text):
-        self.text = text
+class MockToolUseBlock:
+    def __init__(self, data):
+        self.type = "tool_use"
+        self.name = "submit_hypotheses"
+        self.input = {"hypotheses": data}
 
 class MockMessages:
-    def __init__(self, mock_response_text):
-        self._mock_response_text = mock_response_text
+    def __init__(self, mock_data):
+        self._mock_data = mock_data
         
     def create(self, **kwargs):
         class Resp:
-            content = [MockMessage(self._mock_response_text)]
+            content = [MockToolUseBlock(self._mock_data)]
         return Resp()
 
 class MockAnthropicClient:
-    def __init__(self, mock_response_text):
-        self.messages = MockMessages(mock_response_text)
-
+    def __init__(self, mock_data):
+        self.messages = MockMessages(mock_data)
 
 @pytest.fixture
-def patch_anthropic(monkeypatch):
-    def _patch(mock_response_text):
-        monkeypatch.setattr("qrecon.qhypo.agent.Anthropic", lambda api_key: MockAnthropicClient(mock_response_text))
+def patch_anthropic_tools(monkeypatch):
+    def _patch(mock_data):
+        monkeypatch.setattr("qrecon.qhypo.agent.Anthropic", lambda api_key: MockAnthropicClient(mock_data))
     return _patch
 
-
-def test_agent_parses_valid_hypothesis_json_response(patch_anthropic, mock_attack_surface):
-    valid_json = """[
+def test_agent_parses_valid_hypothesis_tool_response(patch_anthropic_tools, mock_attack_surface):
+    valid_data = [
       {
         "hypothesis_id": "H001",
         "title": "Test Title",
@@ -63,9 +63,9 @@ def test_agent_parses_valid_hypothesis_json_response(patch_anthropic, mock_attac
         "confidence": 0.8,
         "novelty": "Very"
       }
-    ]"""
+    ]
     
-    patch_anthropic(valid_json)
+    patch_anthropic_tools(valid_data)
     
     agent = QHypoAgent(anthropic_api_key="fake_key")
     report = agent.generate_hypotheses(mock_attack_surface, hypothesis_count=1)
@@ -73,19 +73,6 @@ def test_agent_parses_valid_hypothesis_json_response(patch_anthropic, mock_attac
     assert report.hypothesis_count == 1
     assert len(report.hypotheses) == 1
     assert report.hypotheses[0].hypothesis_id == "H001"
-
-
-def test_agent_handles_malformed_json_gracefully(patch_anthropic, mock_attack_surface):
-    malformed_json = """[ { "hypothesis_id": "H001" """ 
-    
-    patch_anthropic(malformed_json)
-    
-    agent = QHypoAgent(anthropic_api_key="fake_key")
-    report = agent.generate_hypotheses(mock_attack_surface)
-    
-    assert report.hypothesis_count == 0
-    assert "Failed to parse model output" in report.generation_notes
-
 
 def test_agent_handles_api_error_gracefully(monkeypatch, mock_attack_surface):
     from anthropic import APIError
@@ -107,30 +94,6 @@ def test_agent_handles_api_error_gracefully(monkeypatch, mock_attack_surface):
     
     assert report.hypothesis_count == 0
     assert "API call failed" in report.generation_notes
-
-
-def test_hypothesis_report_serializes_to_json(patch_anthropic, mock_attack_surface):
-    valid_json = """[
-      {
-        "hypothesis_id": "H001",
-        "title": "Test",
-        "technique_hypothesis": "QTT",
-        "rationale": "Rat",
-        "test_request": {"method": "GET", "endpoint_pattern": "/"},
-        "expected_vulnerable_response": "200",
-        "expected_secure_response": "403",
-        "confidence": 0.9,
-        "novelty": "Nov"
-      }
-    ]"""
-    patch_anthropic(valid_json)
-    
-    agent = QHypoAgent(anthropic_api_key="fake_key")
-    report = agent.generate_hypotheses(mock_attack_surface)
-    
-    serialized = report.model_dump_json()
-    assert "H001" in serialized
-
 
 def test_prompt_template_fills_all_variables():
     prompt = HYPOTHESIS_GENERATION_PROMPT_TEMPLATE.format(

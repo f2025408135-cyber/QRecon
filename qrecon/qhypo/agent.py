@@ -83,8 +83,56 @@ class QHypoAgent:
             hypothesis_count=hypothesis_count
         )
 
+        tool_schema = {
+            "name": "submit_hypotheses",
+            "description": "Submit exactly the requested number of adversarial hypotheses structured as a JSON array.",
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "hypotheses": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "hypothesis_id": {"type": "string"},
+                                "title": {"type": "string"},
+                                "technique_hypothesis": {"type": "string"},
+                                "rationale": {"type": "string"},
+                                "test_request": {
+                                    "type": "object",
+                                    "properties": {
+                                        "method": {"type": "string"},
+                                        "endpoint_pattern": {"type": "string"},
+                                        "headers_to_test": {
+                                            "type": "object",
+                                            "additionalProperties": {"type": "string"}
+                                        },
+                                        "parameters_to_test": {
+                                            "type": "object",
+                                            "additionalProperties": {}
+                                        }
+                                    },
+                                    "required": ["method", "endpoint_pattern"]
+                                },
+                                "expected_vulnerable_response": {"type": "string"},
+                                "expected_secure_response": {"type": "string"},
+                                "confidence": {"type": "number"},
+                                "novelty": {"type": "string"}
+                            },
+                            "required": [
+                                "hypothesis_id", "title", "technique_hypothesis", 
+                                "rationale", "test_request", "expected_vulnerable_response",
+                                "expected_secure_response", "confidence", "novelty"
+                            ]
+                        }
+                    }
+                },
+                "required": ["hypotheses"]
+            }
+        }
+
         try:
-            logger.info("generating_hypotheses", count=hypothesis_count, platform=attack_surface_map.platform)
+            logger.info("generating_hypotheses_via_tools", count=hypothesis_count, platform=attack_surface_map.platform)
             response = self.client.messages.create(
                 model=self.model,
                 max_tokens=4000,
@@ -92,9 +140,22 @@ class QHypoAgent:
                 system=SYSTEM_PROMPT,
                 messages=[
                     {"role": "user", "content": user_prompt}
-                ]
+                ],
+                tools=[tool_schema],
+                tool_choice={"type": "tool", "name": "submit_hypotheses"}
             )
-            content = response.content[0].text
+            
+            tool_use = None
+            for block in response.content:
+                if block.type == "tool_use" and block.name == "submit_hypotheses":
+                    tool_use = block
+                    break
+                    
+            if not tool_use:
+                raise ValueError("Model failed to call the required tool.")
+                
+            data = tool_use.input.get("hypotheses", [])
+            
         except (APIError, APITimeoutError) as e:
             logger.error("anthropic_api_error", error=str(e))
             return HypothesisReport(
@@ -112,28 +173,9 @@ class QHypoAgent:
                 generation_notes=f"Unexpected error during generation: {str(e)}"
             )
 
-        try:
-            if "```json" in content:
-                content = content.split("```json")[1].split("```")[0].strip()
-            elif "```" in content:
-                content = content.split("```")[1].split("```")[0].strip()
-                
-            data = json.loads(content)
-        except json.JSONDecodeError as e:
-            logger.error("json_parse_error", error=str(e), content_preview=content[:100])
-            return HypothesisReport(
-                platform=attack_surface_map.platform,
-                model_used=self.model,
-                hypothesis_count=0,
-                generation_notes=f"Failed to parse model output as JSON: {str(e)}\nRaw output: {content[:200]}..."
-            )
-
         hypotheses = []
-        notes = "Successfully generated hypotheses."
+        notes = "Successfully generated structured hypotheses."
         try:
-            if not isinstance(data, list):
-                 data = [data] 
-                 
             for item in data:
                  hypo = Hypothesis(
                      hypothesis_id=item.get("hypothesis_id", "H000"),

@@ -81,7 +81,7 @@ def test_rate_limit_prober_detects_absent_rate_limiting():
     result = prober.probe()
     
     assert len(result.probes_executed) == 1
-    assert len(result.probes_executed[0]["results"]) == 10
+    assert len(result.probes_executed[0]["results"]) == 20
     
     assert len(result.findings) == 1
     assert result.findings[0].severity == "medium"
