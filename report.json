@@ -1,0 +1,22 @@
+{
+  "platform": "ibm-quantum",
+  "enumeration_timestamp": "2026-04-12T14:00:23.761628",
+  "backends": [],
+  "account_info": {},
+  "api_metadata": {},
+  "rate_limit_info": {},
+  "attack_surface_notes": [
+    "Authentication failed. Enumeration aborted."
+  ],
+  "errors": [
+    {
+      "module": "ibm",
+      "operation": "authenticate",
+      "error_type": "ValueError",
+      "message": "Failed to authenticate: 'channel' can only be 'ibm_cloud', or 'ibm_quantum_platform",
+      "timestamp": "2026-04-12T14:00:23.761599"
+    }
+  ],
+  "raw_findings": [],
+  "enumeration_duration_seconds": 0.00014829635620117188
+}

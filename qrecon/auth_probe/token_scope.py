@@ -1,13 +1,16 @@
 import httpx
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Any
 from pydantic import BaseModel, Field
 
 from qrecon.q_attck.models import Finding, Severity
 
+def _now_utc():
+    return datetime.now(timezone.utc)
+
 class TokenScopeProbingResult(BaseModel):
     platform: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=_now_utc)
     tier_1_results: Dict[str, str] = {}
     tier_2_results: Dict[str, str] = {}
     findings: List[Finding] = []
@@ -33,6 +36,8 @@ class TokenScopeProber:
                 try:
                     resp = client.get(f"{base_url}/v4/users/me", headers=headers)
                     result.tier_1_results["get_account"] = str(resp.status_code)
+                except httpx.RequestError as e:
+                    result.tier_1_results["get_account"] = "Error: Network failure"
                 except Exception as e:
                     result.tier_1_results["get_account"] = "Error"
                     
@@ -57,6 +62,8 @@ class TokenScopeProber:
                                 raw_data={"url": url, "status_code": resp.status_code}
                             )
                             result.findings.append(finding)
+                    except httpx.RequestError as e:
+                         result.tier_2_results[name] = "Error: Network failure"
                     except Exception as e:
                         result.tier_2_results[name] = "Error"
 

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
@@ -27,6 +27,9 @@ class Technique(BaseModel):
     severity: Severity
     platforms: List[str]
 
+def _now_utc():
+    return datetime.now(timezone.utc)
+
 class Finding(BaseModel):
     id: UUID = Field(default_factory=uuid4)
     module: str
@@ -35,7 +38,7 @@ class Finding(BaseModel):
     severity: Severity
     platform: str
     raw_data: Dict[str, Any]
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=_now_utc)
 
 class MappedFinding(BaseModel):
     finding: Finding

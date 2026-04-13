@@ -1,21 +1,27 @@
 import time
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Any
 
 try:
     import boto3
-    from botocore.exceptions import ClientError
+    from botocore.exceptions import ClientError, BotoCoreError
     BOTO3_AVAILABLE = True
 except ImportError:
     BOTO3_AVAILABLE = False
 
+from qrecon.config import get_logger
 from qrecon.platform_enum.models import (
     BraketEnumerationResult,
     BackendInfo,
     EnumerationError,
 )
 from qrecon.q_attck.models import Finding, Severity
+
+logger = get_logger("braket_enumerator")
+
+def _now_utc():
+    return datetime.now(timezone.utc)
 
 class BraketEnumerator:
     def __init__(self, aws_access_key_id: str, aws_secret_access_key: str, region: str = "us-east-1"):
@@ -37,9 +43,10 @@ class BraketEnumerator:
 
         if not BOTO3_AVAILABLE:
             duration = time.time() - start_time
+            logger.error("boto3_not_installed")
             return BraketEnumerationResult(
                 platform="amazon-braket",
-                enumeration_timestamp=datetime.utcnow(),
+                enumeration_timestamp=_now_utc(),
                 backends=[],
                 account_info={},
                 api_metadata={},
@@ -64,10 +71,11 @@ class BraketEnumerator:
             self.client = session.client('braket')
             self.s3_client = session.client('s3')
         except Exception as e:
+             logger.error("braket_session_creation_failed", error=str(e))
              duration = time.time() - start_time
              return BraketEnumerationResult(
                 platform="amazon-braket",
-                enumeration_timestamp=datetime.utcnow(),
+                enumeration_timestamp=_now_utc(),
                 backends=[],
                 account_info={},
                 api_metadata={},
@@ -113,6 +121,7 @@ class BraketEnumerator:
                         )
                         backends.append(b_info)
                     except Exception as e:
+                        logger.warning("device_details_fetch_failed", deviceArn=device.get('deviceArn'), error=str(e))
                         errors.append(
                             EnumerationError(
                                 module="braket",
@@ -122,6 +131,7 @@ class BraketEnumerator:
                             )
                         )
         except Exception as e:
+            logger.error("device_listing_failed", error=str(e))
             errors.append(
                 EnumerationError(
                     module="braket",
@@ -143,6 +153,7 @@ class BraketEnumerator:
             if braket_buckets:
                 notes.append(f"Found {len(braket_buckets)} potentially Braket-related S3 buckets.")
         except Exception as e:
+            logger.warning("s3_bucket_listing_failed", error=str(e))
             errors.append(
                 EnumerationError(
                     module="braket",
@@ -167,6 +178,7 @@ class BraketEnumerator:
                     })
             account_info["recent_tasks"] = recent_tasks
         except Exception as e:
+             logger.warning("task_history_listing_failed", error=str(e))
              errors.append(
                 EnumerationError(
                     module="braket",
@@ -185,20 +197,25 @@ class BraketEnumerator:
             if e.response['Error']['Code'] == 'AccessDeniedException':
                 permission_results["get_device"] = "Denied"
             else:
+                 logger.debug("iam_probe_get_device_error", error=str(e))
                  permission_results["get_device"] = "Error"
+        except BotoCoreError as e:
+            logger.debug("iam_probe_get_device_error", error=str(e))
+            permission_results["get_device"] = "Error"
                  
         try:
             permission_results["list_tags"] = "Skipped"
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug("iam_probe_list_tags_error", error=str(e))
             
         account_info["iam_probe_results"] = permission_results
         notes.append("Completed IAM permission probes.")
 
         duration = time.time() - start_time
+        logger.info("braket_enumeration_complete", duration=duration, backends=len(backends))
         return BraketEnumerationResult(
             platform="amazon-braket",
-            enumeration_timestamp=datetime.utcnow(),
+            enumeration_timestamp=_now_utc(),
             backends=backends,
             account_info=account_info,
             api_metadata=api_metadata,

@@ -1,14 +1,17 @@
 import time
 import httpx
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Any
 from pydantic import BaseModel, Field
 
 from qrecon.q_attck.models import Finding, Severity
 
+def _now_utc():
+    return datetime.now(timezone.utc)
+
 class RateLimitProbingResult(BaseModel):
     platform: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=_now_utc)
     probes_executed: List[Dict[str, Any]] = []
     findings: List[Finding] = []
 
@@ -45,6 +48,8 @@ class RateLimitProber:
                         })
                         if resp.status_code in [429, 503]:
                             throttled = True
+                    except httpx.RequestError as e:
+                         probe_record["results"].append({"iteration": i, "status": "Network Error"})
                     except Exception as e:
                          pass
                          

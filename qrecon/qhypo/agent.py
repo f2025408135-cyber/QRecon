@@ -7,6 +7,7 @@ try:
 except ImportError:
     ANTHROPIC_AVAILABLE = False
 
+from qrecon.config import get_logger
 from qrecon.platform_enum.models import AttackSurfaceMap
 from qrecon.auth_probe.token_scope import TokenScopeProbingResult
 from qrecon.auth_probe.cross_tenant import CrossTenantProbingResult
@@ -15,6 +16,8 @@ from qrecon.circuit_lens.models import CircuitFinding
 from qrecon.q_attck.models import MappedFinding
 from qrecon.qhypo.models import Hypothesis, HypothesisReport, TestRequest
 from qrecon.qhypo.prompts import SYSTEM_PROMPT, HYPOTHESIS_GENERATION_PROMPT_TEMPLATE
+
+logger = get_logger("qhypo_agent")
 
 class QHypoAgent:
     def __init__(self, anthropic_api_key: str, model: str = "claude-3-5-sonnet-20241022"):
@@ -32,6 +35,7 @@ class QHypoAgent:
     ) -> HypothesisReport:
         
         if not self.client:
+            logger.error("anthropic_client_missing", available=ANTHROPIC_AVAILABLE)
             return HypothesisReport(
                 platform=attack_surface_map.platform,
                 model_used=self.model,
@@ -80,6 +84,7 @@ class QHypoAgent:
         )
 
         try:
+            logger.info("generating_hypotheses", count=hypothesis_count, platform=attack_surface_map.platform)
             response = self.client.messages.create(
                 model=self.model,
                 max_tokens=4000,
@@ -91,6 +96,7 @@ class QHypoAgent:
             )
             content = response.content[0].text
         except (APIError, APITimeoutError) as e:
+            logger.error("anthropic_api_error", error=str(e))
             return HypothesisReport(
                 platform=attack_surface_map.platform,
                 model_used=self.model,
@@ -98,6 +104,7 @@ class QHypoAgent:
                 generation_notes=f"API call failed: {str(e)}"
             )
         except Exception as e:
+            logger.error("unexpected_generation_error", error=str(e))
             return HypothesisReport(
                 platform=attack_surface_map.platform,
                 model_used=self.model,
@@ -113,6 +120,7 @@ class QHypoAgent:
                 
             data = json.loads(content)
         except json.JSONDecodeError as e:
+            logger.error("json_parse_error", error=str(e), content_preview=content[:100])
             return HypothesisReport(
                 platform=attack_surface_map.platform,
                 model_used=self.model,
@@ -140,8 +148,10 @@ class QHypoAgent:
                  )
                  hypotheses.append(hypo)
         except Exception as e:
+            logger.warning("hypothesis_validation_error", error=str(e))
             notes = f"Validation errors occurred while parsing some hypotheses: {str(e)}"
 
+        logger.info("generation_complete", successfully_parsed=len(hypotheses))
         return HypothesisReport(
             platform=attack_surface_map.platform,
             model_used=self.model,

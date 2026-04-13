@@ -1,6 +1,9 @@
 from typing import Dict, List, Any
-from datetime import datetime
+from datetime import datetime, timezone
 from pydantic import BaseModel, Field
+
+def _now_utc():
+    return datetime.now(timezone.utc)
 
 class TestRequest(BaseModel):
     method: str
@@ -21,7 +24,7 @@ class Hypothesis(BaseModel):
 
 class HypothesisReport(BaseModel):
     platform: str
-    generated_at: datetime = Field(default_factory=datetime.utcnow)
+    generated_at: datetime = Field(default_factory=_now_utc)
     model_used: str
     hypothesis_count: int
     hypotheses: List[Hypothesis] = Field(default_factory=list)

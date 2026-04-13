@@ -1,8 +1,11 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
 from qrecon.q_attck.models import Finding
+
+def _now_utc():
+    return datetime.now(timezone.utc)
 
 class QubitCalibration(BaseModel):
     qubit_id: int
@@ -27,7 +30,7 @@ class EnumerationError(BaseModel):
     operation: str
     error_type: str
     message: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=_now_utc)
 
 class AttackSurfaceMap(BaseModel):
     platform: str

@@ -1,19 +1,22 @@
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Any
 from pydantic import BaseModel, Field
 
 try:
     from github import Github
-    from github.GithubException import RateLimitExceededException
+    from github.GithubException import RateLimitExceededException, GithubException
     GITHUB_AVAILABLE = True
 except ImportError:
     GITHUB_AVAILABLE = False
 
 from qrecon.q_attck.models import Finding, Severity
 
+def _now_utc():
+    return datetime.now(timezone.utc)
+
 class CredentialLeakScanResult(BaseModel):
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=_now_utc)
     queries_executed: int = 0
     disclaimer: str = "QRecon reports potential exposures for responsible disclosure purposes only. Do not use found credentials."
     findings: List[Finding] = []
@@ -79,6 +82,8 @@ class CredentialLeakScanner:
                     
             except RateLimitExceededException:
                 break
+            except GithubException as e:
+                pass
             except Exception as e:
                 pass
 

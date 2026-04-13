@@ -2,7 +2,7 @@ import json
 import pytest
 from typer.testing import CliRunner
 
-from cli import app
+from qrecon.cli import app
 
 runner = CliRunner()
 
@@ -17,7 +17,7 @@ def mock_env_vars(monkeypatch):
 @pytest.fixture
 def mock_enumerators(monkeypatch):
     from qrecon.platform_enum.models import IBMEnumerationResult, BraketEnumerationResult
-    from datetime import datetime
+    from datetime import datetime, timezone
     
     class MockIBM:
         def __init__(self, token):
@@ -25,12 +25,12 @@ def mock_enumerators(monkeypatch):
         def enumerate(self):
             return IBMEnumerationResult(
                 platform="ibm-quantum",
-                enumeration_timestamp=datetime.utcnow(),
+                enumeration_timestamp=datetime.now(timezone.utc),
                 backends=[], account_info={}, api_metadata={}, rate_limit_info={},
                 attack_surface_notes=[], errors=[], raw_findings=[], enumeration_duration_seconds=0.1
             )
             
-    monkeypatch.setattr("cli.IBMQuantumEnumerator", MockIBM)
+    monkeypatch.setattr("qrecon.cli.IBMQuantumEnumerator", MockIBM)
 
 
 def test_full_cli_enum_command_runs_with_mock_credentials(mock_env_vars, mock_enumerators, tmp_path):

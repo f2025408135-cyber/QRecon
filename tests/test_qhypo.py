@@ -1,6 +1,6 @@
 import json
 import pytest
-from datetime import datetime
+from datetime import datetime, timezone
 
 from qrecon.platform_enum.models import AttackSurfaceMap
 from qrecon.qhypo.agent import QHypoAgent
@@ -10,7 +10,7 @@ from qrecon.qhypo.prompts import HYPOTHESIS_GENERATION_PROMPT_TEMPLATE
 def mock_attack_surface():
     return AttackSurfaceMap(
         platform="ibm-quantum",
-        enumeration_timestamp=datetime.utcnow(),
+        enumeration_timestamp=datetime.now(timezone.utc),
         backends=[],
         account_info={},
         api_metadata={},

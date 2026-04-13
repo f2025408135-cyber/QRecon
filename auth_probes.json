@@ -1,0 +1,99 @@
+{
+  "token_scope": {
+    "platform": "ibm-quantum",
+    "timestamp": "2026-04-12 14:01:25.120603",
+    "tier_1_results": {
+      "get_account": "Error"
+    },
+    "tier_2_results": {
+      "network_admin": "Error",
+      "user_listing": "Error",
+      "admin_config": "Error"
+    },
+    "findings": []
+  },
+  "rate_limits": {
+    "platform": "ibm-quantum",
+    "timestamp": "2026-04-12 14:01:25.205609",
+    "probes_executed": [
+      {
+        "endpoint": "https://api.quantum-computing.ibm.com/v4/users/me",
+        "results": []
+      }
+    ],
+    "findings": [
+      {
+        "id": "02cc6f34-5b72-4ad8-bc8c-844740871b41",
+        "module": "auth_probe.rate_limits",
+        "title": "Absent Rate Limiting",
+        "description": "Burst of API requests did not trigger a 429 Too Many Requests response.",
+        "severity": "medium",
+        "platform": "ibm-quantum",
+        "raw_data": {
+          "endpoint": "https://api.quantum-computing.ibm.com/v4/users/me",
+          "requests_sent": 10
+        },
+        "timestamp": "2026-04-12 14:01:25.273273"
+      }
+    ]
+  },
+  "cross_tenant": {
+    "platform": "ibm-quantum",
+    "timestamp": "2026-04-12 14:01:25.273520",
+    "probed_job_ids": [
+      "job_12346",
+      "job_12344",
+      "job_12347",
+      "job_12343",
+      "job_12348",
+      "job_12342",
+      "job_12349",
+      "job_12341",
+      "job_12350",
+      "job_12340"
+    ],
+    "job_responses": {
+      "job_12346": {
+        "GET": "Error",
+        "DELETE": "Error"
+      },
+      "job_12344": {
+        "GET": "Error",
+        "DELETE": "Error"
+      },
+      "job_12347": {
+        "GET": "Error",
+        "DELETE": "Error"
+      },
+      "job_12343": {
+        "GET": "Error",
+        "DELETE": "Error"
+      },
+      "job_12348": {
+        "GET": "Error",
+        "DELETE": "Error"
+      },
+      "job_12342": {
+        "GET": "Error",
+        "DELETE": "Error"
+      },
+      "job_12349": {
+        "GET": "Error",
+        "DELETE": "Error"
+      },
+      "job_12341": {
+        "GET": "Error",
+        "DELETE": "Error"
+      },
+      "job_12350": {
+        "GET": "Error",
+        "DELETE": "Error"
+      },
+      "job_12340": {
+        "GET": "Error",
+        "DELETE": "Error"
+      }
+    },
+    "findings": []
+  }
+}

@@ -1,11 +1,12 @@
 import time
 import httpx
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Any
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 
+from qrecon.config import IBM_API_BASE_URL, get_logger
 from qrecon.platform_enum.models import (
     IBMEnumerationResult,
     BackendInfo,
@@ -14,11 +15,16 @@ from qrecon.platform_enum.models import (
 )
 from qrecon.q_attck.models import Finding
 
+logger = get_logger("ibm_enumerator")
+
+def _now_utc():
+    return datetime.now(timezone.utc)
+
 class IBMQuantumEnumerator:
     def __init__(self, ibm_token: str):
         self.ibm_token = ibm_token
         self.service = None
-        self.api_base_url = "https://api.quantum-computing.ibm.com"
+        self.api_base_url = IBM_API_BASE_URL
         
     def enumerate(self) -> IBMEnumerationResult:
         start_time = time.time()
@@ -32,6 +38,7 @@ class IBMQuantumEnumerator:
         try:
             self.service = QiskitRuntimeService(channel="ibm_quantum", token=self.ibm_token)
         except Exception as e:
+            logger.error("ibm_authentication_failed", error=str(e))
             errors.append(
                 EnumerationError(
                     module="ibm",
@@ -43,7 +50,7 @@ class IBMQuantumEnumerator:
             duration = time.time() - start_time
             return IBMEnumerationResult(
                 platform="ibm-quantum",
-                enumeration_timestamp=datetime.utcnow(),
+                enumeration_timestamp=_now_utc(),
                 backends=[],
                 account_info={},
                 api_metadata={},
@@ -101,6 +108,7 @@ class IBMQuantumEnumerator:
                                 if len(cal_dict) > 0:
                                     notes.append(f"Backend {b_info.name} exposes detailed calibration data.")
                         except Exception as e:
+                            logger.warning("calibration_fetch_failed", backend=backend.name, error=str(e))
                             errors.append(
                                 EnumerationError(
                                     module="ibm",
@@ -112,6 +120,7 @@ class IBMQuantumEnumerator:
 
                     backends.append(b_info)
                 except Exception as e:
+                     logger.warning("backend_details_failed", backend=backend.name, error=str(e))
                      errors.append(
                         EnumerationError(
                             module="ibm",
@@ -121,6 +130,7 @@ class IBMQuantumEnumerator:
                         )
                     )
         except Exception as e:
+            logger.error("backend_listing_failed", error=str(e))
             errors.append(
                 EnumerationError(
                     module="ibm",
@@ -136,7 +146,7 @@ class IBMQuantumEnumerator:
                  account_info["channel"] = instances.channel
                  account_info["instance"] = instances.instance
         except Exception as e:
-             pass
+             logger.debug("account_info_fetch_failed", error=str(e))
 
         try:
             with httpx.Client() as client:
@@ -155,6 +165,7 @@ class IBMQuantumEnumerator:
                 if resp.status_code == 200:
                     account_info["user_details"] = resp.json()
         except Exception as e:
+            logger.warning("api_probe_failed", error=str(e))
             errors.append(
                 EnumerationError(
                     module="ibm",
@@ -176,6 +187,7 @@ class IBMQuantumEnumerator:
                 for j in jobs
             ]
         except Exception as e:
+            logger.warning("job_history_fetch_failed", error=str(e))
             errors.append(
                 EnumerationError(
                     module="ibm",
@@ -186,9 +198,10 @@ class IBMQuantumEnumerator:
             )
 
         duration = time.time() - start_time
+        logger.info("ibm_enumeration_complete", duration=duration, backends=len(backends))
         return IBMEnumerationResult(
             platform="ibm-quantum",
-            enumeration_timestamp=datetime.utcnow(),
+            enumeration_timestamp=_now_utc(),
             backends=backends,
             account_info=account_info,
             api_metadata=api_metadata,

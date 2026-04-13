@@ -1,14 +1,17 @@
 import re
 import httpx
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Any
 from pydantic import BaseModel, Field
 
 from qrecon.q_attck.models import Finding, Severity
 
+def _now_utc():
+    return datetime.now(timezone.utc)
+
 class CrossTenantProbingResult(BaseModel):
     platform: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=_now_utc)
     probed_job_ids: List[str] = []
     job_responses: Dict[str, Dict[str, str]] = {}
     findings: List[Finding] = []
@@ -59,6 +62,9 @@ class CrossTenantProber:
                         )
                         result.findings.append(finding)
 
+                except httpx.RequestError as e:
+                    responses["GET"] = "Error: Network failure"
+                    responses["DELETE"] = "Error: Network failure"
                 except Exception as e:
                     responses["GET"] = "Error"
                     responses["DELETE"] = "Error"
