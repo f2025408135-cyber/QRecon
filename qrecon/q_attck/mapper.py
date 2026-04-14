@@ -1,6 +1,6 @@
 from typing import Optional
 from qrecon.q_attck.loader import QuantumATTCKLoader
-from qrecon.q_attck.models import Finding, MappedFinding, Severity
+from qrecon.q_attck.models import Finding, MappedFinding
 
 class FindingMapper:
     def __init__(self, loader: Optional[QuantumATTCKLoader] = None):

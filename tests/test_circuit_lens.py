@@ -1,4 +1,3 @@
-import pytest
 from pathlib import Path
 
 from qrecon.circuit_lens.parser import CircuitParser

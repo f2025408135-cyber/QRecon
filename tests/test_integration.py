@@ -16,7 +16,7 @@ def mock_env_vars(monkeypatch):
 # Mock enumerator so we don't actually hit the network in integration tests
 @pytest.fixture
 def mock_enumerators(monkeypatch):
-    from qrecon.platform_enum.models import IBMEnumerationResult, BraketEnumerationResult
+    from qrecon.platform_enum.models import IBMEnumerationResult
     from datetime import datetime, timezone
     
     class MockIBM:

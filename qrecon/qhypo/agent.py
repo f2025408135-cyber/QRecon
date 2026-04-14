@@ -1,5 +1,5 @@
 import json
-from typing import Dict, List, Any, Optional
+from typing import List, Any, Optional
 
 try:
     from anthropic import Anthropic, APIError, APITimeoutError
@@ -9,9 +9,6 @@ except ImportError:
 
 from qrecon.config import get_logger
 from qrecon.platform_enum.models import AttackSurfaceMap
-from qrecon.auth_probe.token_scope import TokenScopeProbingResult
-from qrecon.auth_probe.cross_tenant import CrossTenantProbingResult
-from qrecon.auth_probe.rate_limits import RateLimitProbingResult
 from qrecon.circuit_lens.models import CircuitFinding
 from qrecon.q_attck.models import MappedFinding
 from qrecon.qhypo.models import Hypothesis, HypothesisReport, TestRequest

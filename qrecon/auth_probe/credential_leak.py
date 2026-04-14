@@ -1,6 +1,6 @@
 import time
 from datetime import datetime, timezone
-from typing import Dict, List, Any
+from typing import List
 from pydantic import BaseModel, Field
 
 try:
@@ -82,9 +82,9 @@ class CredentialLeakScanner:
                     
             except RateLimitExceededException:
                 break
-            except GithubException as e:
+            except GithubException:
                 pass
-            except Exception as e:
+            except Exception:
                 pass
 
         return result

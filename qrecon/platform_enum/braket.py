@@ -16,7 +16,7 @@ from qrecon.platform_enum.models import (
     BackendInfo,
     EnumerationError,
 )
-from qrecon.q_attck.models import Finding, Severity
+from qrecon.q_attck.models import Finding
 
 logger = get_logger("braket_enumerator")
 

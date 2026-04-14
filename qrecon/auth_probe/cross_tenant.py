@@ -1,7 +1,7 @@
 import re
 import httpx
 from datetime import datetime, timezone
-from typing import Dict, List, Any
+from typing import Dict, List
 from pydantic import BaseModel, Field
 
 from qrecon.q_attck.models import Finding, Severity
@@ -62,10 +62,10 @@ class CrossTenantProber:
                         )
                         result.findings.append(finding)
 
-                except httpx.RequestError as e:
+                except httpx.RequestError:
                     responses["GET"] = "Error: Network failure"
                     responses["DELETE"] = "Error: Network failure"
-                except Exception as e:
+                except Exception:
                     responses["GET"] = "Error"
                     responses["DELETE"] = "Error"
                     

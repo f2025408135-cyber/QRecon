@@ -1,5 +1,4 @@
 import asyncio
-import time
 import httpx
 from datetime import datetime, timezone
 from typing import Dict, List, Any
@@ -90,5 +89,5 @@ class RateLimitProber:
                 "status": resp.status_code,
                 "headers": dict(resp.headers)
             }
-        except httpx.RequestError as e:
+        except httpx.RequestError:
             return {"iteration": iteration, "status": "Network Error"}

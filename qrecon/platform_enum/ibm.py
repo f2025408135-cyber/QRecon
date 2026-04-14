@@ -4,7 +4,6 @@ from datetime import datetime, timezone
 from typing import Dict, List, Any
 
 from qiskit_ibm_runtime import QiskitRuntimeService
-from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 
 from qrecon.config import IBM_API_BASE_URL, get_logger
 from qrecon.platform_enum.models import (
@@ -13,7 +12,6 @@ from qrecon.platform_enum.models import (
     QubitCalibration,
     EnumerationError,
 )
-from qrecon.q_attck.models import Finding
 
 logger = get_logger("ibm_enumerator")
 

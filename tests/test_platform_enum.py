@@ -6,7 +6,6 @@ from httpx import Response
 from qrecon.platform_enum.ibm import IBMQuantumEnumerator
 from qrecon.platform_enum.braket import BraketEnumerator
 from qrecon.platform_enum.azure import AzureQuantumEnumerator
-from qrecon.platform_enum.ionq import IonQEnumerator
 
 
 @pytest.fixture

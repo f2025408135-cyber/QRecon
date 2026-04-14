@@ -59,12 +59,14 @@ def enum(platform: str = typer.Option(..., help="Platform to enumerate (ibm, bra
         task = progress.add_task(f"[cyan]Enumerating {platform}...", total=100)
         
         if platform == "ibm":
-            enumerator = IBMQuantumEnumerator(creds["ibm_token"])
+            enumerator_ibm = IBMQuantumEnumerator(creds["ibm_token"])
+            progress.update(task, advance=50)
+            result = enumerator_ibm.enumerate()
         else:
-            enumerator = BraketEnumerator(creds["aws_access_key_id"], creds["aws_secret_access_key"])
-            
-        progress.update(task, advance=50)
-        result = enumerator.enumerate()
+            enumerator_braket = BraketEnumerator(creds["aws_access_key_id"], creds["aws_secret_access_key"])
+            progress.update(task, advance=50)
+            result = enumerator_braket.enumerate()
+        
         progress.update(task, advance=50)
         
     with open(output, "w") as f:
@@ -102,7 +104,7 @@ def auth(platform: str = typer.Option(..., help="Platform to test (ibm, braket)"
     with open(output, "w") as f:
         json.dump(results, f, indent=2, default=str)
         
-    console.print(f"[green]Auth probes complete![/green]")
+    console.print("[green]Auth probes complete![/green]")
     console.print(f"Results saved to [bold]{output}[/bold]")
 
 @circuit_app.command("analyze")
@@ -172,10 +174,11 @@ def full(platform: str = typer.Option(..., help="Platform to enumerate (ibm, bra
     # 1. Enum
     console.print("Running enumeration...")
     if platform == "ibm":
-        enumerator = IBMQuantumEnumerator(creds["ibm_token"])
+        enumerator_ibm_full = IBMQuantumEnumerator(creds["ibm_token"])
+        enum_result = enumerator_ibm_full.enumerate()
     else:
-        enumerator = BraketEnumerator(creds["aws_access_key_id"], creds["aws_secret_access_key"])
-    enum_result = enumerator.enumerate()
+        enumerator_braket_full = BraketEnumerator(creds["aws_access_key_id"], creds["aws_secret_access_key"])
+        enum_result = enumerator_braket_full.enumerate()
     
     # 2. Auth Probes
     console.print("Running auth probes...")

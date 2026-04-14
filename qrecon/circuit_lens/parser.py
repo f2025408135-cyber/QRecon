@@ -1,8 +1,7 @@
-from typing import Dict, Any, Tuple
+from typing import Dict
 import openqasm3
 from openqasm3.ast import (
-    Include, QubitDeclaration, ClassicalDeclaration, 
-    QuantumGate, QuantumMeasurement, QuantumPhase
+    QubitDeclaration, QuantumGate, QuantumMeasurement
 )
 from qiskit.circuit.quantumcircuit import QuantumCircuit
 
@@ -25,7 +24,7 @@ class CircuitParser:
     def _parse_qasm3(self, qasm: str) -> ParsedCircuit:
         try:
             ast = openqasm3.parse(qasm)
-        except Exception as e:
+        except Exception:
             return self._parse_qasm2_with_qiskit(qasm)
             
         qubit_count = 0

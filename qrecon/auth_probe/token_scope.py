@@ -1,6 +1,6 @@
 import httpx
 from datetime import datetime, timezone
-from typing import Dict, List, Any
+from typing import Dict, List
 from pydantic import BaseModel, Field
 
 from qrecon.q_attck.models import Finding, Severity
@@ -36,9 +36,9 @@ class TokenScopeProber:
                 try:
                     resp = client.get(f"{base_url}/v4/users/me", headers=headers)
                     result.tier_1_results["get_account"] = str(resp.status_code)
-                except httpx.RequestError as e:
+                except httpx.RequestError:
                     result.tier_1_results["get_account"] = "Error: Network failure"
-                except Exception as e:
+                except Exception:
                     result.tier_1_results["get_account"] = "Error"
                     
                 tier_2_endpoints = {
@@ -62,9 +62,9 @@ class TokenScopeProber:
                                 raw_data={"url": url, "status_code": resp.status_code}
                             )
                             result.findings.append(finding)
-                    except httpx.RequestError as e:
+                    except httpx.RequestError:
                          result.tier_2_results[name] = "Error: Network failure"
-                    except Exception as e:
+                    except Exception:
                         result.tier_2_results[name] = "Error"
 
         return result
